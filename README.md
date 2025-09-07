@@ -64,9 +64,13 @@
       file:
         path: "{{ temp_dir }}/kafka.tgz"
         state: absent
+
+```
+![Скриншот команды ansible-playbook -i production.ini download_and_extract.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_ansible_downloads_kafka.png)
+![Скриншот команды ansible-playbook -i production.ini download_and_extract.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_ansible_downloads_kafka.png)
+
+
 ---
-
-
 ### Задание 2
 
 **Выполните действия, приложите файлы с модифицированным плейбуком и вывод выполнения.** 

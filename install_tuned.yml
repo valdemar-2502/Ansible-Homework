@@ -1,0 +1,22 @@
+---
+- name: Установка и настройка tuned
+  hosts: servers
+  become: yes
+
+  tasks:
+    - name: Установить пакет tuned
+      package:
+        name: tuned
+        state: present
+
+    - name: Запустить службу tuned
+      systemd:
+        name: tuned
+        state: started
+        enabled: yes
+
+    - name: Проверить статус службы tuned
+      systemd:
+        name: tuned
+        state: started
+        enabled: yes

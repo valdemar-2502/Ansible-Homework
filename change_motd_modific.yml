@@ -1,0 +1,40 @@
+---
+- name: Изменение системного приветствия (motd)
+  hosts: servers
+  become: yes
+  vars:
+    custom_motd: "Have a great day, system administrator!"
+
+  tasks:
+    - name: Создать кастомное приветствие
+      copy:
+        content: |
+          ========================================
+          Get on our server!
+
+          Hostname: {{ ansible_hostname }}
+          IP-адрес: {{ ansible_default_ipv4.address }}
+          ОС: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Ядро: {{ ansible_kernel }}
+          Текущее время: {{ ansible_date_time.time }}
+
+          {{ custom_motd }}
+          ========================================
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Отключить динамическое обновление motd (если используется)
+      file:
+        path: /etc/update-motd.d
+        state: absent
+      when: ansible_os_family == "Debian"
+
+    - name: Проверить изменение motd
+      command: cat /etc/motd
+      register: motd_content
+
+    - name: Показать содержимое motd
+      debug:
+        msg: "Текущее приветствие: {{ motd_content.stdout }}"

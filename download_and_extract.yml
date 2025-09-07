@@ -1,0 +1,42 @@
+---
+- name: Скачать и распаковать архив Apache Kafka
+  hosts: servers
+  become: yes
+  vars:
+    kafka_version: "3.6.1"
+    kafka_scala_version: "2.13"
+    download_url: "https://dlcdn.apache.org/kafka/4.0.0/kafka_2.13-4.0.0.tgz"
+    install_dir: "/opt/kafka"
+    temp_dir: "/tmp"
+
+  tasks:
+    - name: Создать папку для установки
+      file:
+        path: "{{ install_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Скачать архив Kafka
+      get_url:
+        url: "{{ download_url }}"
+        dest: "{{ temp_dir }}/kafka.tgz"
+        mode: '0644'
+
+    - name: Распаковать архив
+      unarchive:
+        src: "{{ temp_dir }}/kafka.tgz"
+        dest: "{{ install_dir }}"
+        remote_src: yes
+        extra_opts: ["--strip-components=1"]
+
+    - name: Установить права на файлы
+      file:
+        path: "{{ install_dir }}"
+        state: directory
+        mode: '0755'
+        recurse: yes
+
+    - name: Удалить временный архив
+      file:
+        path: "{{ temp_dir }}/kafka.tgz"
+        state: absent

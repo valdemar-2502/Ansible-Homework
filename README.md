@@ -67,15 +67,131 @@
 
 ```
 ![Скриншот команды ansible-playbook -i production.ini download_and_extract.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_ansible_downloads_kafka.png)
-![Скриншот команды ansible-playbook -i production.ini download_and_extract.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_ansible_downloads_kafka.png)
+![Скриншот команды ansible-playbook -i production.ini download_and_extract.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_vm-1-kafka.png)
+![Скриншот команды ansible-playbook -i production.ini download_and_extract.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_vm-2-kafka.png)
 
+---
+```
+---
+- name: Установка и настройка tuned
+  hosts: servers
+  become: yes
+
+  tasks:
+    - name: Установить пакет tuned
+      package:
+        name: tuned
+        state: present
+
+    - name: Запустить службу tuned
+      systemd:
+        name: tuned
+        state: started
+        enabled: yes
+
+    - name: Проверить статус службы tuned
+      systemd:
+        name: tuned
+        state: started
+        enabled: yes
+root@test-netology:/infra/inventory#
+```
+![Скриншот команды ansible-playbook -i production.ini install_tuned.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_ansible_install_tuned.png)
+![Скриншот команды ansible-playbook -i production.ini install_tuned.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_vm-1-tuned.png)
+![Скриншот команды ansible-playbook -i production.ini install_tuned.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_vm-2-tuned.png)
+
+---
+```
+---
+- name: Изменение системного приветствия (motd)
+  hosts: servers
+  become: yes
+  vars:
+    custom_motd: "Once you log in, you'll have a lot of fun!!! Current time: {{ ansible_date_time.time }}"
+
+  tasks:
+    - name: Создать кастомное приветствие
+      copy:
+        content: |
+          {{ custom_motd }}
+          Сервер: {{ ansible_hostname }}
+          ОС: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Ядро: {{ ansible_kernel }}
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Отключить динамическое обновление motd (если используется)
+      file:
+        path: /etc/update-motd.d
+        state: absent
+      when: ansible_os_family == "Debian"
+
+    - name: Проверить изменение motd
+      command: cat /etc/motd
+      register: motd_content
+
+    - name: Показать содержимое motd
+      debug:
+        msg: "Текущее приветствие: {{ motd_content.stdout }}"
+```
+![Скриншот команды ansible-playbook -i production.ini change_motd.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_ansible_change_motd.png)
 
 ---
 ### Задание 2
 
 **Выполните действия, приложите файлы с модифицированным плейбуком и вывод выполнения.** 
 
-Модифицируйте плейбук из пункта 3, задания 1. В качестве приветствия он должен установить IP-адрес и hostname управляемого хоста, пожелание хорошего дня системному администратору. 
+Модифицируйте плейбук из пункта 3, задания 1. В качестве приветствия он должен установить IP-адрес и hostname управляемого хоста, а также пожелание хорошего дня системному администратору.
+
+---
+```
+---
+- name: Изменение системного приветствия (motd)
+  hosts: servers
+  become: yes
+  vars:
+    custom_motd: "Have a great day, system administrator!"
+
+  tasks:
+    - name: Создать кастомное приветствие
+      copy:
+        content: |
+          ========================================
+          Get on our server!
+
+          Hostname: {{ ansible_hostname }}
+          IP-адрес: {{ ansible_default_ipv4.address }}
+          ОС: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Ядро: {{ ansible_kernel }}
+          Текущее время: {{ ansible_date_time.time }}
+
+          {{ custom_motd }}
+          ========================================
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Отключить динамическое обновление motd (если используется)
+      file:
+        path: /etc/update-motd.d
+        state: absent
+      when: ansible_os_family == "Debian"
+
+    - name: Проверить изменение motd
+      command: cat /etc/motd
+      register: motd_content
+
+    - name: Показать содержимое motd
+      debug:
+        msg: "Текущее приветствие: {{ motd_content.stdout }}"
+```
+![Скриншот команды ansible-playbook -i production.ini change_motd_modific.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_ansible_change_motd_modific.png)
+![Скриншот команды ansible-playbook -i production.ini change_motd_modific.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_vm-1-chang_motd_modific.png)
+![Скриншот команды ansible-playbook -i production.ini change_motd_modific.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_vm-2_change_motd_modific.png)
+
 
 
 
@@ -98,4 +214,31 @@
 - разместите архив созданной роли у себя на Google диске и приложите ссылку на роль в своём решении;
 - предоставьте скриншоты выполнения плейбука;
 - предоставьте скриншот браузера, отображающего сконфигурированный index.html в качестве сайта.
+---
+```
+---
+- name: Установка и настройка Apache сервера
+  hosts: all
+  become: yes
+  roles:
+    - apache_server
+
+  tasks:
+    - name: Проверка доступности веб-сайта
+      ansible.builtin.uri:
+        url: "http://{{ ansible_default_ipv4.address }}"
+        status_code: 200
+      delegate_to: localhost
+      run_once: true
+root@test-netology:/infra#
+
+```
+![Скриншот команды ansible-playbook -i inventory/production.ini playbook.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_ansible_playbook.yml.png)
+![Скриншот команды ansible-playbook -i inventory/production.ini playbook.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_system_info_vm-1.png)
+![Скриншот команды ansible-playbook -i inventory/production.ini playbook.yml](https://github.com/valdemar-2502/Ansible-Homework/blob/main/demo_system_info_vm-2.png)
+
+---
+
+
+
 
